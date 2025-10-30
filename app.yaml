@@ -1,0 +1,15 @@
+runtime: python312
+entrypoint: gunicorn -b :$PORT main:app --timeout 300 --workers 2
+
+instance_class: F4_1G
+
+env_variables:
+  PYTHON_VERSION: "3.12"
+
+automatic_scaling:
+  target_cpu_utilization: 0.65
+  min_instances: 1
+  max_instances: 5
+  min_pending_latency: 30ms
+  max_pending_latency: automatic
+  max_concurrent_requests: 50
