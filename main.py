@@ -15,14 +15,16 @@ from wtforms.validators import DataRequired, Email, ValidationError, Length
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 from flask_sqlalchemy import SQLAlchemy
 import bcrypt
-import tensorflow as tf
-from tensorflow.keras.models import load_model
-from tensorflow.keras.preprocessing import image
+# TensorFlow imports moved to lazy loading functions to prevent segmentation fault
+# import tensorflow as tf
+# from tensorflow.keras.models import load_model
+# from tensorflow.keras.preprocessing import image
 from functools import lru_cache
 import fitz  # PyMuPDF
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_community.embeddings import HuggingFaceEmbeddings
-from langchain_community.vectorstores import FAISS
+# Langchain imports moved to lazy loading to prevent heavy startup
+# from langchain_text_splitters import RecursiveCharacterTextSplitter
+# from langchain_community.embeddings import HuggingFaceEmbeddings
+# from langchain_community.vectorstores import FAISS
 from dotenv import load_dotenv
 import cloudinary
 import cloudinary.uploader
@@ -31,10 +33,15 @@ import cloudinary.api
 # Load environment variables
 load_dotenv()
 
-# Import our custom predictors and validators
-from breast_cancer_predictor import BreastCancerPredictor
-from lung_cancer_predictor import LungCancerPredictor
+# Import form validators only (lightweight)
 from form_validators import EnhancedDiagnosisForm, DiagnosisFormValidator
+
+# Heavy imports moved to lazy loading functions:
+# - BreastCancerPredictor (uses TensorFlow)
+# - LungCancerPredictor (uses TensorFlow)
+# - RecursiveCharacterTextSplitter (uses sentence-transformers)
+# - HuggingFaceEmbeddings (uses sentence-transformers/PyTorch)
+# - FAISS (uses numpy arrays)
 
 # Configure logging
 log_level = os.getenv('LOG_LEVEL', 'INFO').upper()
@@ -154,15 +161,23 @@ breast_cancer_predictor = None
 lung_cancer_predictor = None
 
 def get_breast_cancer_predictor():
+    """Lazy load breast cancer predictor with dynamic imports"""
     global breast_cancer_predictor
     if breast_cancer_predictor is None:
+        logger.info("Loading Breast Cancer Predictor (first time - may take 10-30 seconds)...")
+        from breast_cancer_predictor import BreastCancerPredictor
         breast_cancer_predictor = BreastCancerPredictor(model_path=BREAST_CANCER_MODEL_PATH)
+        logger.info("Breast Cancer Predictor loaded ✓")
     return breast_cancer_predictor
 
 def get_lung_cancer_predictor():
+    """Lazy load lung cancer predictor with dynamic imports"""
     global lung_cancer_predictor
     if lung_cancer_predictor is None:
+        logger.info("Loading Lung Cancer Predictor (first time - may take 10-30 seconds)...")
+        from lung_cancer_predictor import LungCancerPredictor
         lung_cancer_predictor = LungCancerPredictor(model_path=LUNG_CANCER_MODEL_PATH)
+        logger.info("Lung Cancer Predictor loaded ✓")
     return lung_cancer_predictor
 
 # RAG Document Processor
@@ -202,6 +217,10 @@ def get_lung_cancer_doc_processor():
 
 class DocumentProcessor:
     def __init__(self, disease_type=None, preload_data=False):
+        # Lazy import to prevent startup issues
+        from langchain_text_splitters import RecursiveCharacterTextSplitter
+        from langchain_community.embeddings import HuggingFaceEmbeddings
+        
         self.text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=CHUNK_SIZE, 
             chunk_overlap=CHUNK_OVERLAP
@@ -261,6 +280,9 @@ class DocumentProcessor:
 
     def update_vector_store(self, current_report: List[str], specific_disease: str = None):
         try:
+            # Lazy import FAISS
+            from langchain_community.vectorstores import FAISS
+            
             pdf_texts = self.extract_text_from_pdfs(app.config['PDF_FOLDER'], specific_disease)
             all_documents = current_report + pdf_texts
             if all_documents:
