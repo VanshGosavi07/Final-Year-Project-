@@ -173,6 +173,33 @@ breast_cancer_doc_processor = None
 lung_cancer_doc_processor = None
 general_doc_processor = None
 
+def get_general_doc_processor():
+    """Lazy load general document processor"""
+    global general_doc_processor
+    if general_doc_processor is None:
+        logger.info("Initializing general document processor...")
+        general_doc_processor = DocumentProcessor()
+        logger.info("General document processor initialized ✓")
+    return general_doc_processor
+
+def get_breast_cancer_doc_processor():
+    """Lazy load breast cancer document processor"""
+    global breast_cancer_doc_processor
+    if breast_cancer_doc_processor is None:
+        logger.info("Initializing breast cancer document processor...")
+        breast_cancer_doc_processor = DocumentProcessor(disease_type='breast_cancer', preload_data=True)
+        logger.info("Breast cancer document processor initialized ✓")
+    return breast_cancer_doc_processor
+
+def get_lung_cancer_doc_processor():
+    """Lazy load lung cancer document processor"""
+    global lung_cancer_doc_processor
+    if lung_cancer_doc_processor is None:
+        logger.info("Initializing lung cancer document processor...")
+        lung_cancer_doc_processor = DocumentProcessor(disease_type='lung_cancer', preload_data=True)
+        logger.info("Lung cancer document processor initialized ✓")
+    return lung_cancer_doc_processor
+
 class DocumentProcessor:
     def __init__(self, disease_type=None, preload_data=False):
         self.text_splitter = RecursiveCharacterTextSplitter(
@@ -472,15 +499,13 @@ def detect_disease_context(user_input: str) -> str:
     return None
 
 def get_disease_specific_processor(disease_type: str):
-    """Get pre-loaded disease-specific document processor."""
-    global breast_cancer_doc_processor, lung_cancer_doc_processor, general_doc_processor
-    
+    """Get disease-specific document processor with lazy loading."""
     if disease_type == 'breast_cancer':
-        return breast_cancer_doc_processor
+        return get_breast_cancer_doc_processor()
     elif disease_type == 'lung_cancer':
-        return lung_cancer_doc_processor
+        return get_lung_cancer_doc_processor()
     else:
-        return general_doc_processor
+        return get_general_doc_processor()
 
 def chat_with_bot(user_input: str, disease_context: str = None) -> str:
     if not user_input.strip():
@@ -495,7 +520,7 @@ def chat_with_bot(user_input: str, disease_context: str = None) -> str:
             logger.info(f"Using {disease_context.replace('_', ' ').title()} specific RAG data from session")
         else:
             # Fallback to general processor
-            context = doc_processor.retrieve_context(user_input)
+            context = get_general_doc_processor().retrieve_context(user_input)
             logger.info("Using general RAG data (disease processor not found)")
     else:
         # Fallback: try to detect disease context for standalone chat usage
@@ -506,7 +531,7 @@ def chat_with_bot(user_input: str, disease_context: str = None) -> str:
             logger.info(f"Using {detected_disease.replace('_', ' ').title()} specific RAG data (detected)")
         else:
             # Use general processor for general queries
-            context = doc_processor.retrieve_context(user_input)
+            context = get_general_doc_processor().retrieve_context(user_input)
             logger.info("Using general RAG data")
     
     # Create a concise, well-formatted prompt
@@ -713,7 +738,7 @@ def generate_report():
             disease_processor.update_vector_store(PERSONAL_REPORTS, specific_disease=session['current_disease'])
             logger.info(f"Updated {disease_name} specific RAG with current report")
         else:
-            doc_processor.update_vector_store(PERSONAL_REPORTS)
+            get_general_doc_processor().update_vector_store(PERSONAL_REPORTS)
 
         # Use Cloudinary URLs if available, otherwise fall back to local paths
         display_image_paths = []
@@ -773,41 +798,36 @@ def init_app():
         db.create_all()
         logger.info("Database tables created/verified")
         
-        # Pre-load all RAG processors for maximum speed
-        logger.info("Pre-loading all RAG processors for maximum performance...")
+        # LAZY LOADING: Don't pre-load heavy processors/models at startup
+        # They will be initialized on first use to avoid memory issues
+        logger.info("Application configured for lazy loading (models load on first use)")
         
         global breast_cancer_doc_processor, lung_cancer_doc_processor, general_doc_processor
         
-        # Initialize general processor
-        general_doc_processor = DocumentProcessor()
-        logger.info("General processor initialized ✓")
+        # Set to None - will be initialized on demand
+        general_doc_processor = None
+        breast_cancer_doc_processor = None
+        lung_cancer_doc_processor = None
+        breast_cancer_predictor = None
+        lung_cancer_predictor = None
         
-        # Pre-load disease-specific processors for breast cancer and lung cancer
-        breast_cancer_doc_processor = DocumentProcessor(disease_type='breast_cancer', preload_data=True)
-        lung_cancer_doc_processor = DocumentProcessor(disease_type='lung_cancer', preload_data=True)
+        logger.info("✓ Lazy loading enabled - models will load when needed")
         
-        logger.info("All RAG processors pre-loaded successfully ✓")
-        
-        # Initialize predictors
-        try:
-            logger.info("Initializing AI predictors...")
-            logger.info(f"Breast Cancer model path: {BREAST_CANCER_MODEL_PATH}")
-            logger.info(f"Lung Cancer model path: {LUNG_CANCER_MODEL_PATH}")
-            
-            breast_cancer_predictor = BreastCancerPredictor(model_path=BREAST_CANCER_MODEL_PATH)
-            lung_cancer_predictor = LungCancerPredictor(model_path=LUNG_CANCER_MODEL_PATH)
-            
-            # Verify models loaded
-            bc_loaded = breast_cancer_predictor.model is not None
-            lc_loaded = lung_cancer_predictor.model is not None
-            
-            logger.info(f"Breast Cancer model loaded: {'✓' if bc_loaded else '✗'}")
-            logger.info(f"Lung Cancer model loaded: {'✓' if lc_loaded else '✗'}")
-            
-            if bc_loaded and lc_loaded:
-                logger.info("All AI predictors initialized successfully")
-            else:
-                logger.warning("Some AI models failed to load - check model file paths")
+        # # Uncomment below for eager loading (requires more memory)
+        # try:
+        #     general_doc_processor = DocumentProcessor()
+        #     logger.info("General processor initialized ✓")
+        #     
+        #     breast_cancer_doc_processor = DocumentProcessor(disease_type='breast_cancer', preload_data=True)
+        #     lung_cancer_doc_processor = DocumentProcessor(disease_type='lung_cancer', preload_data=True)
+        #     logger.info("All RAG processors pre-loaded successfully ✓")
+        #     
+        #     logger.info("Initializing AI predictors...")
+        #     breast_cancer_predictor = BreastCancerPredictor(model_path=BREAST_CANCER_MODEL_PATH)
+        #     lung_cancer_predictor = LungCancerPredictor(model_path=LUNG_CANCER_MODEL_PATH)
+        #     logger.info("All AI predictors initialized successfully")
+        # except Exception as e:
+        #     logger.error(f"Failed to initialize models: {str(e)}")
                 
         except Exception as e:
             logger.error(f"Failed to initialize predictors: {str(e)}")
