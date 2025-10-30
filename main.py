@@ -828,11 +828,6 @@ def init_app():
         #     logger.info("All AI predictors initialized successfully")
         # except Exception as e:
         #     logger.error(f"Failed to initialize models: {str(e)}")
-                
-        except Exception as e:
-            logger.error(f"Failed to initialize predictors: {str(e)}")
-            breast_cancer_predictor = None
-            lung_cancer_predictor = None
         
         # Validate environment configuration
         logger.info("Environment configuration:")
