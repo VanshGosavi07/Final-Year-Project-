@@ -1,0 +1,156 @@
+# =============================================================================
+# MEDICAL AI SYSTEM - GIT IGNORE CONFIGURATION
+# =============================================================================
+
+# Environment Variables (CRITICAL - NEVER COMMIT)
+.env
+.env.local
+.env.production
+.env.staging
+
+# Database Files (PostgreSQL via Neon Cloud - no local DB files)
+# Note: *.db patterns kept for OS files (Thumbs.db, ehthumbs.db)
+instance/
+database/
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# IDE Files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS Files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+*.log.*
+
+# Temporary Files
+*.tmp
+*.temp
+temp/
+tmp/
+
+# Test and Migration Files
+test_*.py
+check_*.py
+clean_*.py
+verify_*.py
+migrate_*.py
+update_*.py
+
+# Unnecessary Documentation
+CLOUD_INTEGRATION_GUIDE.md
+CONFIGURATION_COMPLETE.md
+LOADER_IMPLEMENTATION.md
+MIGRATION_SUMMARY.md
+SETUP_COMPLETE.md
+
+# Upload Files (uploaded by users)
+static/uploads/*
+!static/uploads/.gitkeep
+
+# AI Model Files (if large - optional)
+# *.keras
+# *.h5
+# *.pkl
+# *.joblib
+
+# AI Model Training Datasets (Large files - DO NOT upload to GitHub)
+Modal/Breast Cancer/Dataset/
+Modal/Lung Cancer/Lung Cancer Dataset/
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints/
+
+# pytest
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Flask
+instance/
+.webassets-cache
+
+# Secrets and Configuration
+config.ini
+secrets.json
+*.key
+*.pem
+*.crt
+
+# Backup Files
+*.bak
+*.backup
+
+# Documentation Build
+docs/_build/
+
+# PyCharm
+.idea/
+
+# Spyder
+.spyderproject
+.spyproject
+
+# Rope
+.ropeproject
+
+# mkdocs
+/site
+
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# =============================================================================
+# IMPORTANT SECURITY NOTES:
+# 
+# 1. .env files contain sensitive information (API keys, database passwords)
+# 2. Never commit these files to version control
+# 3. Use .env.example for sharing configuration templates
+# 4. Always verify .env is in .gitignore before committing
+# 5. Regularly rotate API keys and secrets
+# 
+# =============================================================================

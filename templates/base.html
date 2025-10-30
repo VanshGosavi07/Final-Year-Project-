@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Medical Diagnosis System</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css"
+    />
+    <style>
+      body {
+        background: linear-gradient(135deg, #f8e7f6, #e0f7fa);
+        font-family: "Arial", sans-serif;
+        position: relative;
+      }
+
+      .navbar {
+        background: linear-gradient(135deg, #910a67, #4a148c);
+      }
+
+      .navbar-brand,
+      .nav-link {
+        color: white !important;
+        transition: color 0.3s ease;
+      }
+
+      .nav-link:hover {
+        color: #ffd700 !important;
+      }
+
+      .nav-link {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .nav-link::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 5px;
+        background: #ffd700;
+        transform: scaleX(0);
+        transform-origin: right;
+        transition: transform 0.3s ease;
+      }
+
+      .nav-link:hover::after {
+        transform: scaleX(1);
+        transform-origin: left;
+      }
+
+      /* Loader Styles */
+    .loader-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 9999;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: blur(3px);
+    }      .loader-overlay.active {
+        display: flex;
+      }
+
+      .loader-content {
+        text-align: center;
+        color: white;
+      }
+
+      .spinner {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 20px;
+        border: 8px solid rgba(255, 255, 255, 0.3);
+        border-top: 8px solid #910a67;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+
+      @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      .loader-text {
+        font-size: 18px;
+        font-weight: bold;
+        margin-top: 10px;
+      }
+
+      .loader-subtext {
+        font-size: 14px;
+        opacity: 0.8;
+        margin-top: 5px;
+      }
+
+      /* Global Responsive Styles */
+      @media (max-width: 1200px) {
+        .container {
+          max-width: 95%;
+        }
+      }
+
+      @media (max-width: 992px) {
+        .navbar-brand {
+          font-size: 1.2rem;
+        }
+        
+        .nav-link {
+          font-size: 0.95rem;
+        }
+
+        h1, .display-1 {
+          font-size: 2.5rem !important;
+        }
+
+        h2, .display-2 {
+          font-size: 2rem !important;
+        }
+
+        h3 {
+          font-size: 1.5rem !important;
+        }
+
+        .card {
+          margin: 15px 10px !important;
+        }
+      }
+
+      @media (max-width: 768px) {
+        body {
+          font-size: 14px;
+        }
+
+        .navbar-brand {
+          font-size: 1rem;
+        }
+
+        .nav-link {
+          font-size: 0.9rem;
+          padding: 0.3rem 0.5rem !important;
+        }
+
+        h1, .display-1 {
+          font-size: 2rem !important;
+        }
+
+        h2, .display-2 {
+          font-size: 1.75rem !important;
+        }
+
+        h3 {
+          font-size: 1.25rem !important;
+        }
+
+        .card {
+          margin: 10px 5px !important;
+          border-radius: 15px !important;
+        }
+
+        .btn {
+          font-size: 0.9rem !important;
+          padding: 0.5rem 1rem !important;
+        }
+
+        .form-control, .form-select {
+          font-size: 0.9rem !important;
+        }
+
+        .spinner {
+          width: 60px;
+          height: 60px;
+        }
+
+        .loader-text {
+          font-size: 16px;
+        }
+
+        .loader-subtext {
+          font-size: 12px;
+        }
+
+        /* Make tables responsive */
+        .table-responsive {
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+        }
+
+        table {
+          font-size: 0.85rem;
+        }
+      }
+
+      @media (max-width: 576px) {
+        .navbar-brand {
+          font-size: 0.9rem;
+        }
+
+        .navbar-toggler {
+          font-size: 0.8rem;
+        }
+
+        h1, .display-1 {
+          font-size: 1.5rem !important;
+        }
+
+        h2, .display-2, .display-5 {
+          font-size: 1.25rem !important;
+        }
+
+        h3 {
+          font-size: 1.1rem !important;
+        }
+
+        p {
+          font-size: 0.85rem !important;
+        }
+
+        .card {
+          margin: 5px !important;
+          border-radius: 10px !important;
+        }
+
+        .card-body {
+          padding: 1rem !important;
+        }
+
+        .btn {
+          font-size: 0.85rem !important;
+          padding: 0.4rem 0.8rem !important;
+        }
+
+        .btn-lg {
+          font-size: 1rem !important;
+          padding: 0.5rem 1rem !important;
+        }
+
+        .form-control, .form-select {
+          font-size: 0.85rem !important;
+          padding: 0.4rem 0.6rem !important;
+        }
+
+        .input-group-text {
+          font-size: 0.85rem !important;
+          padding: 0.4rem 0.6rem !important;
+        }
+
+        .spinner {
+          width: 50px;
+          height: 50px;
+          border-width: 6px;
+        }
+
+        .loader-text {
+          font-size: 14px;
+        }
+
+        .loader-subtext {
+          font-size: 11px;
+        }
+
+        /* Adjust SVG sizes for mobile */
+        svg {
+          max-width: 80px !important;
+          max-height: 80px !important;
+        }
+
+        /* Stack columns on small screens */
+        .row > [class*="col-"] {
+          margin-bottom: 0.5rem;
+        }
+
+        /* Make images responsive */
+        img {
+          max-width: 100%;
+          height: auto;
+        }
+
+        /* Adjust bubble sizes for mobile */
+        .bubble {
+          display: none !important;
+        }
+      }
+
+      @media (max-width: 400px) {
+        body {
+          font-size: 12px;
+        }
+
+        .navbar-brand {
+          font-size: 0.8rem;
+        }
+
+        h1, .display-1 {
+          font-size: 1.25rem !important;
+        }
+
+        h2, .display-2, .display-5 {
+          font-size: 1.1rem !important;
+        }
+
+        h3 {
+          font-size: 1rem !important;
+        }
+
+        .card-body {
+          padding: 0.75rem !important;
+        }
+
+        .btn {
+          font-size: 0.75rem !important;
+          padding: 0.3rem 0.6rem !important;
+        }
+
+        .form-control, .form-select {
+          font-size: 0.75rem !important;
+          padding: 0.3rem 0.5rem !important;
+        }
+
+        svg {
+          max-width: 60px !important;
+          max-height: 60px !important;
+        }
+      }
+
+      /* Responsive container adjustments */
+      .container-fluid {
+        padding-left: 15px;
+        padding-right: 15px;
+      }
+
+      /* Ensure proper spacing on mobile */
+      @media (max-width: 768px) {
+        .mt-5, .my-5 {
+          margin-top: 2rem !important;
+        }
+
+        .mb-5, .my-5 {
+          margin-bottom: 2rem !important;
+        }
+
+        .pt-5, .py-5 {
+          padding-top: 2rem !important;
+        }
+
+        .pb-5, .py-5 {
+          padding-bottom: 2rem !important;
+        }
+      }
+
+      /* Fix viewport height issues on mobile */
+      @media (max-width: 768px) {
+        .vh-100 {
+          min-height: 100vh;
+          height: auto !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Global Loader -->
+    <div class="loader-overlay" id="globalLoader">
+      <div class="loader-content">
+        <div class="spinner"></div>
+        <div class="loader-text" id="loaderText">Processing...</div>
+        <div class="loader-subtext" id="loaderSubtext">Please wait</div>
+      </div>
+    </div>
+    <!-- Navbar -->
+    {% if request.endpoint not in [ 'login', 'register'] %}
+    <nav class="navbar navbar-expand-lg navbar-dark mb-8">
+      <div class="container">
+        <a class="navbar-brand" href="/">Medical Diagnosis System</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#navbarNav"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a class="nav-link" href="/form">Diagnosis Form</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/chat-page">Chat</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="/logout">Logout</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    {% endif %}
+
+    <!-- Main Content -->
+    <div class="container py-4">{% block content %}{% endblock %}</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  </body>
+</html>
