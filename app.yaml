@@ -5,6 +5,13 @@ instance_class: F4_1G
 
 env_variables:
   PYTHON_VERSION: "3.12"
+  # Add your environment variables here or use: gcloud app deploy --set-env-vars-file=.env.yaml
+  # SECRET_KEY: "your_secret_key"
+  # GROQ_API_KEY: "your_groq_api_key"
+  # CLOUDINARY_CLOUD_NAME: "your_cloudinary_cloud_name"
+  # CLOUDINARY_API_KEY: "your_cloudinary_api_key"
+  # CLOUDINARY_API_SECRET: "your_cloudinary_api_secret"
+  # SQLALCHEMY_DATABASE_URI: "your_postgresql_connection_string"
 
 automatic_scaling:
   target_cpu_utilization: 0.65

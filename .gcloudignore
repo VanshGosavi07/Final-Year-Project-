@@ -1,0 +1,44 @@
+# This file specifies files that are *not* uploaded to Google Cloud Platform
+# using gcloud. It follows the same syntax as .gitignore
+
+.git
+.gitignore
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+ENV/
+.venv
+*.log
+.pytest_cache/
+.coverage
+htmlcov/
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Environment files (secrets handled via app.yaml or gcloud)
+.env
+.env.*
+
+# Documentation
+*.md
+!README.md
+
+# Test files
+test_*.py
+*_test.py
+
+# Dataset folders (large files)
+Modal/Breast Cancer/Dataset/
+Modal/Lung Cancer/Lung Cancer Dataset/
+
+# Git files
+.gitattributes
+.github/
