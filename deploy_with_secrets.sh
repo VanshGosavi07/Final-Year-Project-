@@ -26,7 +26,7 @@ gcloud run deploy $SERVICE_NAME \
     --cpu 2 \
     --timeout 300 \
     --port 8080 \
-    --set-env-vars PORT=8080,FLASK_ENV=production,FLASK_DEBUG=False,PYTHONUNBUFFERED=1 \
+    --set-env-vars FLASK_ENV=production,FLASK_DEBUG=False,PYTHONUNBUFFERED=1 \
     --set-secrets="SECRET_KEY=SECRET_KEY:latest,\
 DATABASE_URL=DATABASE_URL:latest,\
 CLOUDINARY_CLOUD_NAME=CLOUDINARY_CLOUD_NAME:latest,\
