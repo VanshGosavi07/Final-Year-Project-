@@ -1,0 +1,16 @@
+[Unit]
+Description=Medical AI System - Flask Application with Gunicorn
+After=network.target
+
+[Service]
+Type=notify
+User=vanshgosavi7
+Group=vanshgosavi7
+WorkingDirectory=/home/vanshgosavi7/flask_app/Final-Year-Project-
+Environment="PATH=/home/vanshgosavi7/flask_app/Final-Year-Project-/venv/bin"
+ExecStart=/home/vanshgosavi7/flask_app/Final-Year-Project-/venv/bin/gunicorn -c gunicorn_config.py main:app
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
