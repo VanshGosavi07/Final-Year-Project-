@@ -31,7 +31,6 @@ COPY main.py .
 COPY breast_cancer_predictor.py .
 COPY lung_cancer_predictor.py .
 COPY form_validators.py .
-COPY .env .
 
 # Copy templates and static files
 COPY templates/ ./templates/
