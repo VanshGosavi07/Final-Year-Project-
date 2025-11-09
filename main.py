@@ -841,6 +841,23 @@ def generate_report():
             else:
                 display_image_paths.append(path)
 
+        # Trigger chat warmup in background after report generation
+        try:
+            import threading
+            def warmup_chat_processors():
+                try:
+                    logger.info("🔥 Auto-warming chat processors after report generation...")
+                    get_breast_cancer_doc_processor()
+                    get_lung_cancer_doc_processor()
+                    logger.info("✓ Chat processors pre-loaded for instant responses")
+                except Exception as e:
+                    logger.error(f"Warmup error: {e}")
+            
+            thread = threading.Thread(target=warmup_chat_processors, daemon=True)
+            thread.start()
+        except Exception as e:
+            logger.warning(f"Could not start chat warmup: {e}")
+        
         return render_template('report.html', user_type=user_type, name=name, dob=dob, age=age, 
                              disease_name=disease_name, clinical_history=clinical_history, 
                              symptoms=list(symptoms), prepared_by=prepared_by, image_paths=display_image_paths, 
@@ -881,6 +898,36 @@ def get_disease_hints(disease_name):
     except Exception as e:
         logger.error(f"Error getting disease hints: {str(e)}")
         return jsonify({"error": "Failed to get disease hints"}), 500
+
+@app.route('/api/warmup-chat', methods=['POST'])
+def warmup_chat():
+    """Pre-load chat processors in background to speed up first chat."""
+    try:
+        import threading
+        
+        def preload_processors():
+            try:
+                logger.info("🔥 Warming up chat processors in background...")
+                
+                # Pre-load both disease-specific processors
+                get_breast_cancer_doc_processor()
+                logger.info("✓ Breast cancer processor warmed up")
+                
+                get_lung_cancer_doc_processor()
+                logger.info("✓ Lung cancer processor warmed up")
+                
+                logger.info("🎉 Chat warmup complete!")
+            except Exception as e:
+                logger.error(f"Error during warmup: {e}")
+        
+        # Start warmup in background thread
+        thread = threading.Thread(target=preload_processors, daemon=True)
+        thread.start()
+        
+        return jsonify({"status": "warmup_started", "message": "Chat processors loading in background"}), 200
+    except Exception as e:
+        logger.error(f"Error starting warmup: {str(e)}")
+        return jsonify({"error": "Failed to start warmup"}), 500
 
 def init_app():
     with app.app_context():
