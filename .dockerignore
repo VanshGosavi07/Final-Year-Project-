@@ -10,7 +10,6 @@ dist/
 build/
 venv/
 env/
-.env
 .venv
 instance/
 .pytest_cache/
@@ -27,3 +26,15 @@ static/uploads/*
 *.swo
 *~
 node_modules/
+.git/
+.gitignore
+README.md
+Screenshots/
+*.md
+deploy*.sh
+deploy*.bat
+test-startup.sh
+app.yaml
+medical-ai.service
+gunicorn_config.py
+start_production.sh
