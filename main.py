@@ -529,9 +529,28 @@ def get_disease_specific_processor(disease_type: str):
     else:
         return get_general_doc_processor()
 
+def parse_patient_report(report_text: str) -> dict:
+    """Parse PERSONAL_REPORTS string into structured dictionary"""
+    if not report_text:
+        return {}
+    
+    lines = report_text.strip().split('\n')
+    data = {}
+    for line in lines:
+        if ':' in line:
+            key, value = line.split(':', 1)
+            data[key.strip()] = value.strip()
+    return data
+
 def chat_with_bot(user_input: str, disease_context: str = None) -> str:
     if not user_input.strip():
         return "Please enter a valid query."
+    
+    # Get patient data from PERSONAL_REPORTS if available
+    patient_data = None
+    if PERSONAL_REPORTS:
+        patient_data = parse_patient_report(PERSONAL_REPORTS[0])
+        logger.info(f"Patient report loaded for chat: {patient_data.get('Patient Name', 'Unknown')}")
     
     # Use disease context passed from session (from report generation)
     if disease_context:
@@ -559,8 +578,59 @@ def chat_with_bot(user_input: str, disease_context: str = None) -> str:
     # Create a concise, well-formatted prompt
     disease_info = f" regarding {disease_context.replace('_', ' ')}" if disease_context else ""
     
-    # Check if asking about patient info from report
-    if any(word in user_input.lower() for word in ['my name', 'who am i', 'my problem', 'what is wrong', 'my diagnosis', 'my condition']):
+    # Check if asking about patient details from report
+    patient_keywords = ['name', 'patient', 'age', 'details', 'report', 'who', 'exercise', 'diet', 
+                       'precaution', 'birth', 'dob', 'old', 'history', 'symptom', 'examination',
+                       'imaging', 'staging', 'level', 'diagnosis', 'my', 'what is wrong', 'condition']
+    
+    if patient_data and any(word in user_input.lower() for word in patient_keywords):
+        # User is asking about patient-specific information
+        patient_context = f"""
+PATIENT REPORT DETAILS:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📋 Personal Information:
+   • Name: {patient_data.get('Patient Name', 'N/A')}
+   • Age: {patient_data.get('Age', 'N/A')} years old
+   • Date of Birth: {patient_data.get('Date of Birth', 'N/A')}
+   • Report Date: {patient_data.get('Date of Report', 'N/A')}
+
+🏥 Medical Diagnosis:
+   • Disease: {patient_data.get('Disease Name', 'N/A')}
+   • Disease Level/Stage: {patient_data.get('Disease Level', 'N/A')}
+   • Pathological Staging: {patient_data.get('Pathological Staging', 'N/A')}
+
+📝 Clinical Information:
+   • Clinical History: {patient_data.get('Clinical History', 'N/A')}
+   • Symptoms: {patient_data.get('Symptoms', 'N/A')}
+   • Clinical Examination: {patient_data.get('Clinical Examination', 'N/A')}
+   • Imaging Studies: {patient_data.get('Imaging Studies', 'N/A')}
+
+💊 Treatment Recommendations:
+   • Precautions: {patient_data.get('Precautions', 'N/A')}
+   • Recommended Diet: {patient_data.get('Recommended Diet', 'N/A')}
+   • Recommended Exercise: {patient_data.get('Recommended Exercise', 'N/A')}
+
+👨‍⚕️ Prepared By: {patient_data.get('Prepared By', 'N/A')}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+"""
+        
+        prompt = f"""{patient_context}
+
+Medical Knowledge Context:
+{context}
+
+User Question: {user_input}
+
+INSTRUCTIONS:
+- Provide a clear, helpful answer based on the PATIENT REPORT above
+- If the question asks about the patient (name, age, disease, etc.), use the report details
+- Keep answer SHORT and FOCUSED (3-5 sentences)
+- Use bullet points for lists
+- Be professional, compassionate, and clear
+- Format with proper line breaks for readability"""
+        
+    elif any(word in user_input.lower() for word in ['my name', 'who am i', 'my problem', 'what is wrong', 'my diagnosis', 'my condition']):
+        # General patient context questions
         prompt = f"""Based on the patient report context{disease_info}, answer this question CONCISELY:
 
 Context:
@@ -575,6 +645,7 @@ IMPORTANT:
 - Format with line breaks for readability
 - Be conversational and clear"""
     else:
+        # General medical knowledge questions
         prompt = f"""Based on medical knowledge{disease_info}, answer this question CONCISELY:
 
 Context:
