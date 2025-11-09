@@ -10,7 +10,8 @@ logger = logging.getLogger(__name__)
 class BreastCancerPredictor:
     def __init__(self, model_path=r"Modal\Breast Cancer\breast_cancer.keras"):
         """Initialize the breast cancer predictor with the trained model."""
-        self.model_path = os.path.normpath(model_path)
+        # Normalize path for cross-platform compatibility (Windows/Linux)
+        self.model_path = model_path.replace('\\', '/')
         self.model = None
         self.load_model()
     
