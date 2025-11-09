@@ -36,8 +36,8 @@ COPY form_validators.py .
 COPY templates/ ./templates/
 COPY static/ ./static/
 
-# Copy RAG Data
-COPY "RAG Data/" ./RAG\ Data/
+# Copy RAG Data (folder with space in name)
+COPY ["RAG Data/", "./RAG Data/"]
 
 # Copy ML Models (these are large files)
 COPY Modal/ ./Modal/
