@@ -18,15 +18,30 @@ class LungCancerPredictor:
     def load_model(self):
         """Load the trained Keras model."""
         try:
-            if os.path.exists(self.model_path):
-                self.model = load_model(self.model_path)
-                logger.info(f"Lung Cancer model loaded successfully from {self.model_path}")
-                return True
-            else:
+            # Check if file exists and is not empty
+            if not os.path.exists(self.model_path):
                 logger.error(f"Lung Cancer model file not found: {self.model_path}")
+                logger.error(f"Current working directory: {os.getcwd()}")
+                logger.error(f"Absolute path attempted: {os.path.abspath(self.model_path)}")
                 return False
+            
+            # Check if file is not empty
+            file_size = os.path.getsize(self.model_path)
+            if file_size == 0:
+                logger.error(f"Lung Cancer model file is empty (0 bytes): {self.model_path}")
+                return False
+            
+            logger.info(f"Loading Lung Cancer model from: {self.model_path} ({file_size / (1024*1024):.1f} MB)")
+            
+            # Load model
+            self.model = load_model(self.model_path)
+            logger.info(f"Lung Cancer model loaded successfully!")
+            return True
+            
         except Exception as e:
             logger.error(f"Error loading Lung Cancer model: {str(e)}")
+            import traceback
+            logger.error(traceback.format_exc())
             return False
     
     def preprocess_image(self, image_path):
