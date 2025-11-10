@@ -119,22 +119,29 @@ class LungCancerPredictor:
         Returns:
             tuple: (label, confidence, output_path)
         """
-        # Get prediction
-        label, confidence = self.predict_image(image_path)
+        # Get prediction (may return is_malignant as third element)
+        pred = self.predict_image(image_path)
+        if isinstance(pred, tuple) and len(pred) == 3:
+            label, confidence, is_malignant = pred
+        else:
+            # Fallback: maintain backward compatibility
+            label, confidence = pred
+            # Derive flag conservatively
+            is_malignant = True if str(label).strip().startswith('Cancer: Yes') else False
         
         try:
             # Load original image for visualization
             img_cv = cv2.imread(image_path)
             if img_cv is None:
-                return label, confidence, None
+                return label, confidence, None, is_malignant
             
             img_copy = img_cv.copy()
             
-                # Determine color based on explicit flag (avoid substring traps)
-                if is_malignant:
-                    color = (0, 0, 255)  # Red for malignant
-                else:
-                    color = (0, 255, 0)  # Green for benign/normal
+            # Determine color based on explicit flag (avoid substring traps)
+            if is_malignant:
+                color = (0, 0, 255)  # Red for malignant
+            else:
+                color = (0, 255, 0)  # Green for benign/normal
             
             # Add bounding box
             height, width, _ = img_copy.shape
@@ -155,4 +162,4 @@ class LungCancerPredictor:
             
         except Exception as e:
             logger.error(f"Error creating visualization for {image_path}: {str(e)}")
-            return label, confidence, None
+            return label, confidence, None, is_malignant
