@@ -369,8 +369,26 @@ def model_predict(image_paths: tuple, disease_name: str) -> List[Tuple[str, str]
         new_img_full_path = os.path.join('static', new_img_path)
         
         # Get prediction with visualization for diseases with models
-        label, confidence, output_path = predictor.predict_with_visualization(img_full_path, new_img_full_path)
-        
+        pred_result = predictor.predict_with_visualization(img_full_path, new_img_full_path)
+
+        # Support both legacy (label, confidence, output_path) and new (label, confidence, output_path, is_malignant)
+        label = None
+        confidence = 0.0
+        output_path = None
+        is_malignant = None
+
+        if isinstance(pred_result, tuple):
+            if len(pred_result) == 4:
+                label, confidence, output_path, is_malignant = pred_result
+            elif len(pred_result) == 3:
+                label, confidence, output_path = pred_result
+                # Derive flag conservatively
+                is_malignant = True if str(label).strip().startswith('Cancer: Yes') else False
+            else:
+                logger.error(f"Unexpected prediction result shape for {img_path}: {pred_result}")
+        else:
+            logger.error(f"Unexpected prediction result type for {img_path}: {type(pred_result)}")
+
         if output_path:
             results.append((label, new_img_path))
         else:

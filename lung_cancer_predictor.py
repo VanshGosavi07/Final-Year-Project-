@@ -88,17 +88,21 @@ class LungCancerPredictor:
             confidence = float(np.max(prediction[0]))
             predicted_class = self.class_labels[predicted_class_index]
             
-            # Format label consistently with breast cancer predictor
+            # Format label consistently with breast cancer predictor and return explicit flag
             if predicted_class == "Malignant":
                 label = "Cancer: Yes (Malignant)"
+                is_malignant = True
             elif predicted_class == "Benign":
                 label = "Cancer: No (Benign)"
+                is_malignant = False
             elif predicted_class == "Normal":
                 label = "Cancer: No (Normal)"
+                is_malignant = False
             else:
                 label = f"Cancer: {predicted_class}"
+                is_malignant = False
                 
-            return label, confidence
+            return label, confidence, is_malignant
             
         except Exception as e:
             logger.error(f"Prediction failed for {image_path}: {str(e)}")
@@ -126,13 +130,11 @@ class LungCancerPredictor:
             
             img_copy = img_cv.copy()
             
-            # Determine color based on prediction
-            if "Malignant" in label:
-                color = (0, 0, 255)  # Red for malignant
-            elif "Benign" in label or "Normal" in label or "No" in label:
-                color = (0, 255, 0)  # Green for benign/normal
-            else:
-                color = (255, 255, 0)  # Yellow for unknown
+                # Determine color based on explicit flag (avoid substring traps)
+                if is_malignant:
+                    color = (0, 0, 255)  # Red for malignant
+                else:
+                    color = (0, 255, 0)  # Green for benign/normal
             
             # Add bounding box
             height, width, _ = img_copy.shape
@@ -148,7 +150,8 @@ class LungCancerPredictor:
             # Save the output image
             cv2.imwrite(output_path, img_with_text)
             
-            return label, confidence, output_path
+            # Return explicit malignant flag as well for callers that want it
+            return label, confidence, output_path, is_malignant
             
         except Exception as e:
             logger.error(f"Error creating visualization for {image_path}: {str(e)}")

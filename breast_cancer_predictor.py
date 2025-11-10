@@ -88,10 +88,12 @@ class BreastCancerPredictor:
             
             if confidence >= 0.5:
                 label = "Cancer: Yes (Malignant)"
+                is_malignant = True
             else:
                 label = "Cancer: No (Non-Malignant)"
-                
-            return label, confidence
+                is_malignant = False
+
+            return label, confidence, is_malignant
             
         except Exception as e:
             logger.error(f"Prediction failed for {image_path}: {str(e)}")
@@ -108,8 +110,15 @@ class BreastCancerPredictor:
         Returns:
             tuple: (label, confidence, output_path)
         """
-        # Get prediction
-        label, confidence = self.predict_image(image_path)
+        # Get prediction (may return is_malignant as third element)
+        pred = self.predict_image(image_path)
+        if isinstance(pred, tuple) and len(pred) == 3:
+            label, confidence, is_malignant = pred
+        else:
+            # Fallback: maintain backward compatibility
+            label, confidence = pred
+            # Derive flag conservatively
+            is_malignant = True if label.startswith('Cancer: Yes') else False
         
         try:
             # Load original image for visualization
@@ -119,13 +128,11 @@ class BreastCancerPredictor:
             
             img_copy = img_cv.copy()
             
-            # Determine color based on prediction
-            if "Malignant" in label:
+            # Determine color based on explicit flag (avoid substring traps like 'Non-Malignant')
+            if is_malignant:
                 color = (0, 0, 255)  # Red for malignant
-            elif "Non-Malignant" in label:
-                color = (0, 255, 0)  # Green for non-malignant
             else:
-                color = (255, 255, 0)  # Yellow for unknown
+                color = (0, 255, 0)  # Green for non-malignant
             
             # Add bounding box
             height, width, _ = img_copy.shape
@@ -141,7 +148,8 @@ class BreastCancerPredictor:
             # Save the output image
             cv2.imwrite(output_path, img_with_text)
             
-            return label, confidence, output_path
+            # Return explicit malignant flag as well for callers that want it
+            return label, confidence, output_path, is_malignant
             
         except Exception as e:
             logger.error(f"Error creating visualization for {image_path}: {str(e)}")
