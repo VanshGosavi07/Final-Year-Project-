@@ -841,23 +841,7 @@ def generate_report():
             else:
                 display_image_paths.append(path)
 
-        # Trigger chat warmup in background after report generation
-        try:
-            import threading
-            def warmup_chat_processors():
-                try:
-                    logger.info("🔥 Auto-warming chat processors after report generation...")
-                    get_breast_cancer_doc_processor()
-                    get_lung_cancer_doc_processor()
-                    logger.info("✓ Chat processors pre-loaded for instant responses")
-                except Exception as e:
-                    logger.error(f"Warmup error: {e}")
-            
-            thread = threading.Thread(target=warmup_chat_processors, daemon=True)
-            thread.start()
-        except Exception as e:
-            logger.warning(f"Could not start chat warmup: {e}")
-        
+        # NOTE: Warmup no longer needed - all processors pre-loaded at startup!
         return render_template('report.html', user_type=user_type, name=name, dob=dob, age=age, 
                              disease_name=disease_name, clinical_history=clinical_history, 
                              symptoms=list(symptoms), prepared_by=prepared_by, image_paths=display_image_paths, 
@@ -932,42 +916,59 @@ def warmup_chat():
 def init_app():
     with app.app_context():
         global doc_processor, breast_cancer_predictor, lung_cancer_predictor
-        global breast_cancer_doc_processor, lung_cancer_doc_processor
+        global breast_cancer_doc_processor, lung_cancer_doc_processor, general_doc_processor
         
         # Create database tables
         db.create_all()
         logger.info("Database tables created/verified")
         
-        # LAZY LOADING: Don't pre-load heavy processors/models at startup
-        # They will be initialized on first use to avoid memory issues
-        logger.info("Application configured for lazy loading (models load on first use)")
+        # EAGER LOADING: Pre-load all models and processors at startup for maximum performance
+        logger.info("="*80)
+        logger.info("🚀 PERFORMANCE MODE: Pre-loading all models and RAG data...")
+        logger.info("="*80)
         
-        global breast_cancer_doc_processor, lung_cancer_doc_processor, general_doc_processor
-        
-        # Set to None - will be initialized on demand
-        general_doc_processor = None
-        breast_cancer_doc_processor = None
-        lung_cancer_doc_processor = None
-        breast_cancer_predictor = None
-        lung_cancer_predictor = None
-        
-        logger.info("✓ Lazy loading enabled - models will load when needed")
-        
-        # # Uncomment below for eager loading (requires more memory)
-        # try:
-        #     general_doc_processor = DocumentProcessor()
-        #     logger.info("General processor initialized ✓")
-        #     
-        #     breast_cancer_doc_processor = DocumentProcessor(disease_type='breast_cancer', preload_data=True)
-        #     lung_cancer_doc_processor = DocumentProcessor(disease_type='lung_cancer', preload_data=True)
-        #     logger.info("All RAG processors pre-loaded successfully ✓")
-        #     
-        #     logger.info("Initializing AI predictors...")
-        #     breast_cancer_predictor = BreastCancerPredictor(model_path=BREAST_CANCER_MODEL_PATH)
-        #     lung_cancer_predictor = LungCancerPredictor(model_path=LUNG_CANCER_MODEL_PATH)
-        #     logger.info("All AI predictors initialized successfully")
-        # except Exception as e:
-        #     logger.error(f"Failed to initialize models: {str(e)}")
+        try:
+            import time
+            start_time = time.time()
+            
+            # Step 1: Load RAG Processors
+            logger.info("\n📚 Step 1: Loading RAG Document Processors...")
+            logger.info("-"*80)
+            
+            general_doc_processor = DocumentProcessor()
+            logger.info("✓ General processor loaded")
+            
+            breast_cancer_doc_processor = DocumentProcessor(disease_type='breast_cancer', preload_data=True)
+            logger.info("✓ Breast cancer RAG processor loaded with PDF data")
+            
+            lung_cancer_doc_processor = DocumentProcessor(disease_type='lung_cancer', preload_data=True)
+            logger.info("✓ Lung cancer RAG processor loaded with PDF data")
+            
+            # Step 2: Load ML Models
+            logger.info("\n🤖 Step 2: Loading ML Prediction Models...")
+            logger.info("-"*80)
+            
+            breast_cancer_predictor = get_breast_cancer_predictor()
+            logger.info("✓ Breast cancer ML model loaded (31.5 MB)")
+            
+            lung_cancer_predictor = get_lung_cancer_predictor()
+            logger.info("✓ Lung cancer ML model loaded (148.1 MB)")
+            
+            elapsed = time.time() - start_time
+            logger.info("\n" + "="*80)
+            logger.info(f"🎉 ALL MODELS PRE-LOADED! Startup time: {elapsed:.2f} seconds")
+            logger.info("⚡ Application ready for INSTANT responses!")
+            logger.info("="*80)
+            
+        except Exception as e:
+            logger.error(f"❌ Failed to pre-load models: {str(e)}")
+            logger.error("Falling back to lazy loading mode...")
+            # Set to None for lazy loading fallback
+            general_doc_processor = None
+            breast_cancer_doc_processor = None
+            lung_cancer_doc_processor = None
+            breast_cancer_predictor = None
+            lung_cancer_predictor = None
         
         # Validate environment configuration
         logger.info("Environment configuration:")
